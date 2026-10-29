@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 
-export type Role = "tenant" | "landlord";
+export type Role = "tenant" | "landlord" | "admin";
 
 export type CurrentUser = {
   id: string;
@@ -23,6 +23,9 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
   return {
     id: data.claims.sub,
     email: String(data.claims.email ?? ""),
-    role: profile?.role === "landlord" ? "landlord" : "tenant",
+    role:
+      profile?.role === "admin" || profile?.role === "landlord"
+        ? profile.role
+        : "tenant",
   };
 }

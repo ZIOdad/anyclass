@@ -22,10 +22,24 @@ export async function submitComplaint(
 
   const { record } = prepared;
   const supabase = await createClient();
+
+  // 가장 최근에 연결된 물건에 접수한다.
+  const { data: membership } = await supabase
+    .from("property_members")
+    .select("property_id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!membership) {
+    return { error: "연결된 물건이 없어 접수할 수 없습니다. 관리자에게 연결을 요청해 주세요.", text };
+  }
+
   const { data, error } = await supabase
     .from("complaints")
     .insert({
       reporter_id: user.id,
+      property_id: membership.property_id,
       body: record.body,
       problem_type: record.problemType,
       facility: record.facility,

@@ -18,7 +18,11 @@ export function AppShell({
         <div className="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-3 px-6 py-3">
           <nav className="flex flex-wrap items-center gap-4 text-sm">
             <span className="font-heading font-semibold">집주인</span>
-            {user.role === "landlord" ? (
+            {user.role === "admin" ? (
+              <Link href="/admin" className="text-muted-foreground hover:text-foreground">
+                관리자
+              </Link>
+            ) : user.role === "landlord" ? (
               <Link href="/landlord" className="text-muted-foreground hover:text-foreground">
                 임대인 확인
               </Link>
