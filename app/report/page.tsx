@@ -28,8 +28,9 @@ export default async function ReportPage({ searchParams }: PageProps<"/report">)
 
   const user = await getCurrentUser();
   if (!user) redirect("/login");
-  // 임대인은 접수하지 않고 확인만 한다.
+  // 임대인은 접수하지 않고 확인만 하고, 관리자는 관리 화면을 쓴다.
   if (user.role === "landlord") redirect("/landlord");
+  if (user.role === "admin") redirect("/admin");
 
   const supabase = await createClient();
   // 임대인 계정은 전체를 읽을 수 있으므로 본인이 보낸 것만 명시해서 가져온다.
@@ -40,6 +41,15 @@ export default async function ReportPage({ searchParams }: PageProps<"/report">)
     .order("created_at", { ascending: false })
     .limit(10)
     .overrideTypes<ComplaintRow[]>();
+
+  const { data: memberships } = await supabase
+    .from("property_members")
+    .select("property_id, properties(name)")
+    .eq("user_id", user.id)
+    .overrideTypes<{ property_id: string; properties: { name: string } | null }[]>();
+  const propertyNames = (memberships ?? []).flatMap((m) =>
+    m.properties ? [m.properties.name] : [],
+  );
 
   const mine = (data ?? []).map(toComplaintView);
   const justSubmitted =
@@ -55,6 +65,19 @@ export default async function ReportPage({ searchParams }: PageProps<"/report">)
           생활 중 생긴 문제를 적어 주시면 임대인에게 전달됩니다.
         </p>
       </div>
+
+      {propertyNames.length === 0 ? (
+        <Alert variant="destructive">
+          <AlertTitle>연결된 물건이 없습니다</AlertTitle>
+          <AlertDescription>
+            민원을 접수하려면 관리자가 내 계정을 물건에 연결해야 합니다. 관리자에게 요청해 주세요.
+          </AlertDescription>
+        </Alert>
+      ) : (
+        <p className="text-sm text-muted-foreground">
+          접수 물건: {propertyNames.join(", ")}
+        </p>
+      )}
 
       {justSubmitted && (
         <Alert>

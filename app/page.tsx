@@ -6,5 +6,6 @@ export default async function Home() {
   const user = await getCurrentUser();
   if (!user) redirect("/login");
 
-  redirect(user.role === "landlord" ? "/landlord" : "/report");
+  const home = { admin: "/admin", landlord: "/landlord", tenant: "/report" } as const;
+  redirect(home[user.role]);
 }
